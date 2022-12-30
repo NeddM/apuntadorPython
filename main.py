@@ -1,9 +1,9 @@
 
 from os import remove
 import math
-from operator import contains
 import speech_recognition as sr
 from pydub import AudioSegment
+import whisper
 
 
 def nombreArchivo():
@@ -22,7 +22,19 @@ def cargarArchivo():
     return nombreArchivoBruto
 
 
-def transformarAudioEnTexto(rutaArchivo, nombreFinal):
+def transformarAudioEnTextoOpenAI(rutaArchivo, nombreFinal):
+    modelo = whisper.load_model('medium')
+    texto = modelo.transcribe(rutaArchivo)
+    texto = texto['text']
+
+    archivo = open(f"{nombreFinal}.txt", "a")
+    archivo.write(str(texto))
+    archivo.close()
+
+    remove(rutaArchivo)
+
+
+def transformarAudioEnTextoGoogle(rutaArchivo, nombreFinal):
     seg = 50
 
     speech = AudioSegment.from_wav(rutaArchivo)
@@ -50,16 +62,18 @@ def transformarAudioEnTexto(rutaArchivo, nombreFinal):
         remove(f"trozo_{i}.wav")
 
 
-def crearArchivoTexto(nombreFinal, texto):
-    archivo = open(f"{nombreFinal}.txt", "a")
-    archivo.write(str(texto))
-    archivo.close()
-
-
 def main():
+    print("¿Qué herramienta quieres elegir?")
+    print("1. Whisper OPEN AI (Defecto)")
+    print("2. Google Text to speech")
+    elegirHerramienta = input("Herramienta: ")
     rutaArchivo = cargarArchivo()
     nombreFinal = nombreArchivo()
-    transformarAudioEnTexto(rutaArchivo, nombreFinal)
+
+    if elegirHerramienta == "2":
+        transformarAudioEnTextoGoogle(rutaArchivo, nombreFinal)
+    else:
+        transformarAudioEnTextoOpenAI(rutaArchivo, nombreFinal)
 
 
 if __name__ == "__main__":
